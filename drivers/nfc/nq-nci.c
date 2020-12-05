@@ -89,6 +89,8 @@ struct nqx_dev {
 	struct regulator *reg;
 };
 
+extern char *saved_command_line;
+
 static int nfcc_reboot(struct notifier_block *notifier, unsigned long val,
 			void *v);
 /*clock enable function*/
@@ -1504,6 +1506,13 @@ static int nqx_probe(struct i2c_client *client,
 	struct nqx_dev *nqx_dev;
 
 	dev_dbg(&client->dev, "%s: enter\n", __func__);
+
+	if (strnstr(saved_command_line, "androidboot.hwc=INDIA",
+					strlen(saved_command_line)) != NULL) {
+		dev_err(&client->dev, "%s:NFC HWC INDIA : Do not probe nqx\n", __func__);
+		return -ENODEV;
+	}
+
 	if (client->dev.of_node) {
 		platform_data = devm_kzalloc(&client->dev,
 			sizeof(struct nqx_platform_data), GFP_KERNEL);
