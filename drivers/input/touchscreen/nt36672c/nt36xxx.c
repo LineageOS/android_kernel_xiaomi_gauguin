@@ -71,7 +71,6 @@ extern void Boot_Update_Firmware(struct work_struct *work);
 static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
-extern int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo);
 extern void dsi_panel_doubleclick_enable(bool on);
 uint32_t ENG_RST_ADDR  = 0x7FFF80;
 uint32_t SWRST_N8_ADDR = 0; /* read from dtsi */
@@ -1081,6 +1080,32 @@ static bool nvt_cmds_panel_info(void)
 		}
 	}
 	return panel_id;
+}
+
+static inline int dsi_panel_lockdown_info_read(unsigned char *plockdowninfo)
+{
+	if (nvt_cmds_panel_info()) {
+		NVT_LOG("%s: lockdown panel is tianma\n", __func__);
+		plockdowninfo[0] = 0x46;
+		plockdowninfo[1] = 0x36;
+		plockdowninfo[2] = 0x32;
+		plockdowninfo[3] = 0x01;
+		plockdowninfo[4] = 0x4a;
+		plockdowninfo[5] = 0x14;
+		plockdowninfo[6] = 0x31;
+		plockdowninfo[7] = 0x00;
+	} else {
+		NVT_LOG("%s: lockdown panel is huaxing\n", __func__);
+		plockdowninfo[0] = 0x53;
+		plockdowninfo[1] = 0x42;
+		plockdowninfo[2] = 0x32;
+		plockdowninfo[3] = 0x01;
+		plockdowninfo[4] = 0x4a;
+		plockdowninfo[5] = 0x14;
+		plockdowninfo[6] = 0x32;
+		plockdowninfo[7] = 0x00;
+	}
+	return 1;
 }
 
 static int nvt_get_panel_type(struct nvt_ts_data *ts_data)
