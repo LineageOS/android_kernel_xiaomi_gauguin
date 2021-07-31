@@ -222,6 +222,8 @@ struct dsi_panel {
 
 	bool sync_broadcast_en;
 
+	bool tddi_doubleclick_flag;
+
 	int panel_test_gpio;
 	int power_mode;
 	enum dsi_panel_physical_type panel_type;
