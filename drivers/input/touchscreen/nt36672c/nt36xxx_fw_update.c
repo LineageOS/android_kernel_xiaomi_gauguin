@@ -301,13 +301,23 @@ static void update_firmware_release(void)
 
 int touch_fw_override = 0;
 char *touch_fw_name = "novatek_nt36672c_j17_fw01.bin";
+int panel_is_tianma = 0;
 
 static void update_firmware_override(int choice) {
-	switch (choice) {
-		case 1:  touch_fw_name = "novatek_nt36672c_j17_fw01.bin"; break;
-		case 2:  touch_fw_name = "novatek_nt36672c_j17_fw02.bin"; break;
-		case 3:  touch_fw_name = "novatek_nt36672c_j17_mp01.bin"; break;
-		case 4:  touch_fw_name = "novatek_nt36672c_j17_mp02.bin"; break;
+	if (panel_is_tianma) {
+		switch (choice) {
+			case 1:  touch_fw_name = "novatek_nt36672c_j17_fw01.bin"; break;
+			case 3:  touch_fw_name = "novatek_nt36672c_j17_mp01.bin"; break;
+			default: touch_fw_name = "novatek_nt36672c_j17_fw01.bin"; break;
+		}
+		NVT_LOG("tianma: override");
+	} else {
+		switch (choice) {
+			case 2:  touch_fw_name = "novatek_nt36672c_j17_fw02.bin"; break;
+			case 4:  touch_fw_name = "novatek_nt36672c_j17_mp02.bin"; break;
+			default: touch_fw_name = "novatek_nt36672c_j17_fw02.bin"; break;
+		}
+		NVT_LOG("huaxing: override");
 	}
 }
 
