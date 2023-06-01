@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
@@ -228,10 +229,12 @@
 #define CC_MODE_VOTER			"CC_MODE_VOTER"
 #define MAIN_DISABLE_VOTER		"MAIN_DISABLE_VOTER"
 #define TAPER_MAIN_ICL_LIMIT_VOTER	"TAPER_MAIN_ICL_LIMIT_VOTER"
+#define SIX_PIN_VFLOAT_VOTER		"SIX_PIN_VFLOAT_VOTER"
 
 /* Constant definitions */
+/* Need to define max ILIM for smb1398 */
 #define DIV2_MAX_ILIM_UA		5000000
-#define DIV2_MAX_ILIM_DUAL_CP_UA	10000000
+#define DIV2_MAX_ILIM_DUAL_CP_UA	6400000
 #define DIV2_ILIM_CFG_PCT		105
 
 #define TAPER_STEPPER_UA_DEFAULT	100000
@@ -1411,7 +1414,7 @@ static int smb1398_div2_cp_ilim_vote_cb(struct votable *votable,
 	max_ilim_ua = is_cps_available(chip) ?
 		DIV2_MAX_ILIM_DUAL_CP_UA : DIV2_MAX_ILIM_UA;
 	ilim_ua = min(ilim_ua, max_ilim_ua);
-	if (ilim_ua < min_ilim_ua) {
+	if (ilim_ua < chip->div2_cp_min_ilim_ua) {
 		dev_dbg(chip->dev, "ilim %duA is too low to config CP charging\n",
 				ilim_ua);
 		vote(chip->div2_cp_disable_votable, ILIM_VOTER, true, 0);
@@ -1878,6 +1881,12 @@ static void smb1398_taper_work(struct work_struct *work)
 	min_ilim_ua = smb1398_div2_cp_get_min_icl(chip);
 
 	chip->taper_entry_fv = get_effective_result(chip->fv_votable);
+
+	if ((strcmp(get_effective_client(chip->fv_votable), "SIX_PIN_VFLOAT_VOTER") == 0)) {
+		dev_err(chip->dev, "get CHARGE_FV=%d uv\n", chip->taper_entry_fv);
+		goto out;
+	}
+
 	while (true) {
 		rc = power_supply_get_property(chip->batt_psy,
 				POWER_SUPPLY_PROP_CHARGE_TYPE, &pval);
@@ -2099,6 +2108,18 @@ static int smb1398_div2_cp_hw_init(struct smb1398_chip *chip)
 		dev_err(chip->dev, "set OP_MODE_COMBO failed, rc=%d\n", rc);
 		return rc;
 	}
+
+	/* Do not disable FP_FET during IREV conditions */
+	rc = smb1398_masked_write(chip, MISC_CFG0_REG, CFG_DIS_FPF_IREV_BIT, 0);
+	if (rc < 0) {
+		dev_err(chip->dev, "Couldn't set CFG_DIS_FPF_IREV_BIT, rc=%d\n",
+				rc);
+		return rc;
+	}
+
+	rc = smb1398_masked_write(chip, NOLOCK_SPARE_REG, DIV2_WIN_UV_SEL_BIT, 0x00);
+	if (rc < 0)
+		dev_err(chip->dev, "set NOLOCK_SPARE_REG failed, rc=%d\n", rc);
 
 	/* Do not disable FP_FET during IREV conditions */
 	rc = smb1398_masked_write(chip, MISC_CFG0_REG, CFG_DIS_FPF_IREV_BIT, 0);
