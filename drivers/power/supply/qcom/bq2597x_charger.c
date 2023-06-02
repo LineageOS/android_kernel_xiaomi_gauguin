@@ -465,30 +465,6 @@ static int bq2597x_enable_wdt(struct bq2597x *bq, bool enable)
 }
 EXPORT_SYMBOL_GPL(bq2597x_enable_wdt);
 
-static int bq2597x_set_wdt(struct bq2597x *bq, int ms)
-{
-	int ret;
-	u8 val;
-
-	if (ms == 500)
-		val = BQ2597X_WATCHDOG_0P5S;
-	else if (ms == 1000)
-		val = BQ2597X_WATCHDOG_1S;
-	else if (ms == 5000)
-		val = BQ2597X_WATCHDOG_5S;
-	else if (ms == 30000)
-		val = BQ2597X_WATCHDOG_30S;
-	else
-		val = BQ2597X_WATCHDOG_30S;
-
-	val <<= BQ2597X_WATCHDOG_SHIFT;
-
-	ret = bq2597x_update_bits(bq, BQ2597X_REG_0B,
-				BQ2597X_WATCHDOG_MASK, val);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(bq2597x_set_wdt);
-
 static int bq2597x_enable_batovp(struct bq2597x *bq, bool enable)
 {
 	int ret;
@@ -1097,23 +1073,6 @@ static int bq2597x_set_alarm_int_mask(struct bq2597x *bq, u8 mask)
 }
 EXPORT_SYMBOL_GPL(bq2597x_set_alarm_int_mask);
 
-static int bq2597x_clear_alarm_int_mask(struct bq2597x *bq, u8 mask)
-{
-	int ret;
-	u8 val;
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_0F, &val);
-	if (ret)
-		return ret;
-
-	val &= ~mask;
-
-	ret = bq2597x_write_byte(bq, BQ2597X_REG_0F, val);
-
-	return ret;
-}
-EXPORT_SYMBOL_GPL(bq2597x_clear_alarm_int_mask);
-
 static int bq2597x_set_fault_int_mask(struct bq2597x *bq, u8 mask)
 {
 	int ret;
@@ -1130,24 +1089,6 @@ static int bq2597x_set_fault_int_mask(struct bq2597x *bq, u8 mask)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(bq2597x_set_fault_int_mask);
-
-static int bq2597x_clear_fault_int_mask(struct bq2597x *bq, u8 mask)
-{
-	int ret;
-	u8 val;
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_12, &val);
-	if (ret)
-		return ret;
-
-	val &= ~mask;
-
-	ret = bq2597x_write_byte(bq, BQ2597X_REG_12, val);
-
-	return ret;
-}
-EXPORT_SYMBOL_GPL(bq2597x_clear_fault_int_mask);
-
 
 static int bq2597x_set_sense_resistor(struct bq2597x *bq, int r_mohm)
 {
@@ -1421,18 +1362,6 @@ static int bq2597x_parse_dt(struct bq2597x *bq, struct device *dev)
 		bq_err("failed to read bat-ovp-alarm-threshold\n");
 		return ret;
 	}
-	/*ret = of_property_read_u32(np, "ti,bq2597x,bat-ocp-threshold",
-			&bq->cfg->bat_ocp_th);
-	if (ret) {
-		bq_err("failed to read bat-ocp-threshold\n");
-		return ret;
-	}
-	ret = of_property_read_u32(np, "ti,bq2597x,bat-ocp-alarm-threshold",
-			&bq->cfg->bat_ocp_alm_th);
-	if (ret) {
-		bq_err("failed to read bat-ocp-alarm-threshold\n");
-		return ret;
-	}*/
 	ret = of_property_read_u32(np, "ti,bq2597x,bus-ovp-threshold",
 			&bq->cfg->bus_ovp_th);
 	if (ret) {
@@ -1457,12 +1386,6 @@ static int bq2597x_parse_dt(struct bq2597x *bq, struct device *dev)
 		bq_err("failed to read bus-ocp-alarm-threshold\n");
 		return ret;
 	}
-	/*ret = of_property_read_u32(np, "ti,bq2597x,bat-ucp-alarm-threshold",
-			&bq->cfg->bat_ucp_alm_th);
-	if (ret) {
-		bq_err("failed to read bat-ucp-alarm-threshold\n");
-		return ret;
-	}*/
 	ret = of_property_read_u32(np, "ti,bq2597x,bat-therm-threshold",
 			&bq->cfg->bat_therm_th);
 	if (ret) {
@@ -1488,14 +1411,6 @@ static int bq2597x_parse_dt(struct bq2597x *bq, struct device *dev)
 		bq_err("failed to read ac-ovp-threshold\n");
 		return ret;
 	}
-
-	/*ret = of_property_read_u32(np, "ti,bq2597x,sense-resistor-mohm",
-			&bq->cfg->sense_r_mohm);
-	if (ret) {
-		bq_err("failed to read sense-resistor-mohm\n");
-		return ret;
-	}*/
-
 
 	return 0;
 }
@@ -1614,9 +1529,6 @@ static int bq2597x_init_protection(struct bq2597x *bq)
 
 static int bq2597x_set_bus_protection(struct bq2597x *bq, int hvdcp3_type)
 {
-	/* just return now, to do later */
-	//return 0;
-
 	pr_err("hvdcp3_type: %d\n", hvdcp3_type);
 	if (hvdcp3_type == HVDCP3_CLASSA_18W) {
 		bq2597x_set_busovp_th(bq, BUS_OVP_FOR_QC);
@@ -1671,14 +1583,14 @@ static int bq2597x_init_int_src(struct bq2597x *bq)
 		bq_err("failed to set alarm mask:%d\n", ret);
 		return ret;
 	}
-//#if 0
+
 	ret = bq2597x_set_fault_int_mask(bq,
 			TS_BUS_FAULT | TS_DIE_FAULT | TS_BAT_FAULT | BAT_OCP_FAULT);
 	if (ret) {
 		bq_err("failed to set fault mask:%d\n", ret);
 		return ret;
 	}
-//#endif
+
 	return ret;
 }
 
@@ -2022,59 +1934,6 @@ static int bq2597x_psy_register(struct bq2597x *bq)
 	return 0;
 }
 
-static void bq2597x_dump_reg(struct bq2597x *bq)
-{
-
-	int ret;
-	u8 val;
-	u8 addr;
-
-	for (addr = 0x00; addr <= 0x2B; addr++) {
-		ret = bq2597x_read_byte(bq, addr, &val);
-		if (!ret)
-			bq_err("Reg[%02X] = 0x%02X\n", addr, val);
-	}
-
-}
-EXPORT_SYMBOL_GPL(bq2597x_dump_reg);
-
-/*static void bq2597x_dump_important_regs(struct bq2597x *bq)
-{
-
-	int ret;
-	u8 val;
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_0A, &val);
-	if (!ret)
-		bq_err("dump converter state Reg [%02X] = 0x%02X\n",
-				BQ2597X_REG_0A, val);
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_0D, &val);
-	if (!ret)
-		bq_err("dump int stat Reg[%02X] = 0x%02X\n",
-				BQ2597X_REG_0D, val);
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_0E, &val);
-	if (!ret)
-		bq_err("dump int flag Reg[%02X] = 0x%02X\n",
-				BQ2597X_REG_0E, val);
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_10, &val);
-	if (!ret)
-		bq_err("dump fault stat Reg[%02X] = 0x%02X\n",
-				BQ2597X_REG_10, val);
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_11, &val);
-	if (!ret)
-		bq_err("dump fault flag Reg[%02X] = 0x%02X\n",
-				BQ2597X_REG_11, val);
-
-	ret = bq2597x_read_byte(bq, BQ2597X_REG_2D, &val);
-	if (!ret)
-		bq_err("dump regulation flag Reg[%02X] = 0x%02X\n",
-				BQ2597X_REG_2D, val);
-}*/
-
 static void bq2597x_check_alarm_status(struct bq2597x *bq)
 {
 	int ret;
@@ -2167,27 +2026,6 @@ static irqreturn_t bq2597x_charger_interrupt(int irq, void *dev_id)
 	struct bq2597x *bq = dev_id;
 
 	bq_info("INT OCCURED\n");
-
-	/*mutex_lock(&bq->irq_complete);
-	bq->irq_waiting = true;
-	if (!bq->resume_completed) {
-		dev_dbg(bq->dev, "IRQ triggered before device-resume\n");
-		if (!bq->irq_disabled) {
-			disable_irq_nosync(irq);
-			bq->irq_disabled = true;
-		}
-		bq->irq_waiting = false;
-		mutex_unlock(&bq->irq_complete);
-		return IRQ_HANDLED;
-	}
-	bq->irq_waiting = false;*/
-	/* dump some impoartant registers and alarm fault status for debug */
-	/*bq2597x_dump_important_regs(bq);
-	bq2597x_check_alarm_status(bq);
-	bq2597x_check_fault_status(bq);
-	mutex_unlock(&bq->irq_complete);*/
-
-	/* power_supply_changed(bq->fc2_psy); */
 
 	return IRQ_HANDLED;
 }
@@ -2348,8 +2186,6 @@ static int bq2597x_charger_probe(struct i2c_client *client,
 							client->irq, ret);
 			goto err_1;
 		}
-		/* no need to enable this irq as a wakeup source */
-		/* enable_irq_wake(client->irq); */
 	}
 
 	device_init_wakeup(bq->dev, 1);
