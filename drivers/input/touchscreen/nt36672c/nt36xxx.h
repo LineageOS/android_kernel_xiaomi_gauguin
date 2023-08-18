@@ -28,11 +28,6 @@
 #include <linux/sysfs.h>
 #include <linux/workqueue.h>
 
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
-#endif
-
 #include "nt36xxx_mem_map.h"
 
 #define FW_HISTORY_SIZE	128
@@ -130,9 +125,6 @@ struct nvt_ts_data {
 	struct notifier_block drm_notif;
 #else
 	struct notifier_block fb_notif;
-#endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-	struct early_suspend early_suspend;
 #endif
 
 	uint8_t fw_ver;

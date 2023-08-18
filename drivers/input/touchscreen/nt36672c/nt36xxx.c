@@ -35,9 +35,6 @@
 
 #include <linux/notifier.h>
 #include <linux/fb.h>
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-#include <linux/earlysuspend.h>
-#endif
 
 #include "nt36xxx.h"
 #if NVT_TOUCH_ESD_PROTECT
@@ -73,10 +70,6 @@ extern void Boot_Update_Firmware(struct work_struct *work);
 static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
 #else
 static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
-#endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-static void nvt_ts_early_suspend(struct early_suspend *h);
-static void nvt_ts_late_resume(struct early_suspend *h);
 #endif
 static int32_t nvt_ts_suspend(struct device *dev);
 static int32_t nvt_ts_resume(struct device *dev);
@@ -2502,16 +2495,6 @@ static int32_t nvt_ts_probe(struct platform_device *pdev)
 		goto err_register_fb_notif_failed;
 	}
 #endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
-	ts->early_suspend.suspend = nvt_ts_early_suspend;
-	ts->early_suspend.resume = nvt_ts_late_resume;
-	ret = register_early_suspend(&ts->early_suspend);
-	if(ret) {
-		NVT_ERR("register early suspend failed. ret=%d\n", ret);
-		goto err_register_early_suspend_failed;
-	}
-#endif
 
 #ifdef CONFIG_TOUCHSCREEN_NVT_DEBUG_FS
 	ts->debugfs = debugfs_create_dir("tp_debug", NULL);
@@ -2549,10 +2532,6 @@ err_register_drm_notif_failed:
 	if (fb_unregister_client(&ts->fb_notif))
 		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
 err_register_fb_notif_failed:
-#endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-	unregister_early_suspend(&ts->early_suspend);
-err_register_early_suspend_failed:
 #endif
 	destroy_workqueue(ts->event_wq);
 err_alloc_failed:
@@ -2639,9 +2618,6 @@ static int32_t nvt_ts_remove(struct platform_device *pdev)
 	if (fb_unregister_client(&ts->fb_notif))
 		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
 #endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-	unregister_early_suspend(&ts->early_suspend);
-#endif
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
 #endif
@@ -2706,9 +2682,6 @@ static void nvt_ts_shutdown(struct platform_device *pdev)
 #else
 	if (fb_unregister_client(&ts->fb_notif))
 		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-	unregister_early_suspend(&ts->early_suspend);
 #endif
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
@@ -3012,32 +2985,6 @@ static const struct dev_pm_ops nvt_dev_pm_ops = {
 	.suspend = nvt_pm_suspend,
 	.resume = nvt_pm_resume,
 };
-
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-/*******************************************************
-Description:
-	Novatek touchscreen driver early suspend function.
-
-return:
-	n.a.
-*******************************************************/
-static void nvt_ts_early_suspend(struct early_suspend *h)
-{
-	nvt_ts_suspend(ts->client, PMSG_SUSPEND);
-}
-
-/*******************************************************
-Description:
-	Novatek touchscreen driver late resume function.
-
-return:
-	n.a.
-*******************************************************/
-static void nvt_ts_late_resume(struct early_suspend *h)
-{
-	nvt_ts_resume(ts->client);
-}
-#endif
 
 static const struct platform_device_id nvt_ts_id[] = {
 	{ NVT_SPI_NAME, 0 },
