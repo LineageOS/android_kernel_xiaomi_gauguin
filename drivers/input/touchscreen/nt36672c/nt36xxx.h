@@ -37,7 +37,6 @@
 #define PINCTRL_STATE_ACTIVE		"pmx_ts_active"
 #define PINCTRL_STATE_SUSPEND		"pmx_ts_suspend"
 #define PINCTRL_STATE_RELEASE		"pmx_ts_release"
-#define MI_DRM_NOTIFIER
 
 /* ---GPIO number--- */
 #define NVTTOUCH_RST_PIN 980
@@ -120,13 +119,7 @@ struct nvt_ts_data {
 	struct work_struct switch_mode_work;
 	uint16_t addr;
 	int8_t phys[32];
-
-#ifdef MI_DRM_NOTIFIER
 	struct notifier_block drm_notif;
-#else
-	struct notifier_block fb_notif;
-#endif
-
 	uint8_t fw_ver;
 	uint8_t x_num;
 	uint8_t y_num;
