@@ -193,6 +193,34 @@
 			};
 		};
 
+		qupv3_se9_spi_pins: qupv3_se9_spi_pins {
+			qupv3_se9_spi_active: qupv3_se9_spi_active {
+				mux {
+					pins = "gpio25", "gpio26";
+					function = "qup13_f1";
+				};
+
+				config {
+					pins = "gpio25", "gpio26";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+
+			qupv3_se9_spi_sleep: qupv3_se9_spi_sleep {
+				mux {
+					pins = "gpio25", "gpio26";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio25", "gpio26";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+		};
+
 		qupv3_se9_2uart_pins: qupv3_se9_2uart_pins {
 			qupv3_se9_2uart_active: qupv3_se9_2uart_active {
 				mux {
@@ -288,7 +316,7 @@
 			};
 		};
 
-		qupv3_se0_i2c_pins: qupv3_se0_i2c_pins {
+		/*qupv3_se0_i2c_pins: qupv3_se0_i2c_pins {
 			qupv3_se0_i2c_active: qupv3_se0_i2c_active {
 				mux {
 					pins = "gpio0", "gpio1";
@@ -314,7 +342,7 @@
 					bias-disable;
 				};
 			};
-		};
+		};*/
 
 		nfc {
 			nfc_int_active: nfc_int_active {
@@ -552,13 +580,13 @@
 			qupv3_se0_spi_active: qupv3_se0_spi_active {
 				mux {
 					pins = "gpio0", "gpio1",
-							"gpio2", "gpio3";
+							"gpio2";
 					function = "qup00";
 				};
 
 				config {
 					pins = "gpio0", "gpio1",
-							"gpio2", "gpio3";
+							"gpio2";
 					drive-strength = <6>;
 					bias-disable;
 				};
@@ -567,13 +595,13 @@
 			qupv3_se0_spi_sleep: qupv3_se0_spi_sleep {
 				mux {
 					pins = "gpio0", "gpio1",
-							"gpio2", "gpio3";
+							"gpio2";
 					function = "gpio";
 				};
 
 				config {
 					pins = "gpio0", "gpio1",
-							"gpio2", "gpio3";
+							"gpio2";
 					drive-strength = <6>;
 					bias-disable;
 				};
@@ -1276,6 +1304,35 @@
 
 			config {
 				pins = "gpio37";
+				bias-pull-down; /* PULL DOWN */
+				drive-strength = <2>; /* 2 MA */
+				output-low;
+			};
+		};
+
+		cam_sensor_active_rear_aux3: cam_sensor_active_rear_aux3 {
+			/* RESET REARAUX3 */
+			mux {
+				pins = "gpio38";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio38";
+				bias-disable; /* No PULL */
+				drive-strength = <2>; /* 2 MA */
+			};
+		};
+
+		cam_sensor_suspend_rear_aux3: cam_sensor_suspend_rear_aux3 {
+			/* RESET REARAUX3 */
+			mux {
+				pins = "gpio38";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio38";
 				bias-pull-down; /* PULL DOWN */
 				drive-strength = <2>; /* 2 MA */
 				output-low;
