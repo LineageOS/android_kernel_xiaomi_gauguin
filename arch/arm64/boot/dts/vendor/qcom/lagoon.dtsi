@@ -43,6 +43,7 @@
 		swr0 = &swr0;
 		swr1 = &swr1;
 		swr2 = &swr2;
+		spi1 = &qupv3_se9_spi; /* ConsumerIR */
 	};
 
 	cpus {
@@ -302,7 +303,7 @@
 			compatible = "android,firmware";
 				vbmeta {
 					compatible = "android,vbmeta";
-					parts = "vbmeta,boot,system,vendor,dtbo";
+					parts = "vbmeta,boot,system,vendor,dtbo,recovery";
 				};
 
 				fstab {
@@ -312,7 +313,7 @@
 							dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
 							type = "ext4";
 							mnt_flags = "ro,barrier=1,discard";
-							fsmgr_flags = "wait,slotselect,avb";
+							fsmgr_flags = "wait,avb";
 							status = "ok";
 						};
 				};
@@ -325,7 +326,7 @@
 	};
 
 	chosen {
-		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7 earlycon=msm_geni_serial,0x98c000 kpti=off";
+		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7  kpti=off";
 	};
 
 	soc: soc { };
@@ -344,7 +345,7 @@
 		xbl_aop_mem: xbl_aop_mem@80700000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x80700000 0x0 0x160000>;
+			reg = <0x0 0x80600000 0x0 0x260000>;
 		};
 
 		sec_apps_mem: sec_apps_region@808ff000 {
@@ -428,7 +429,7 @@
 		removed_region: removed_region@c0000000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0xc0000000 0x0 0x3900000>;
+			reg = <0x0 0xc0000000 0x0 0x7b00000>;
 		};
 
 		qseecom_mem: qseecom_region {
@@ -675,7 +676,7 @@
 
 		lanes-per-direction = <2>;
 		dev-ref-clk-freq = <0>; /* 19.2 MHz */
-		spm-level = <5>;
+		//spm-level = <5>;
 
 		clock-names =
 			"core_clk",
@@ -1552,7 +1553,7 @@
 
 	qcom_seecom: qseecom@c1700000 {
 		compatible = "qcom,qseecom";
-		reg = <0xc1700000 0x2200000>;
+		reg = <0xc1700000 0x6400000>;
 		reg-names = "secapp-region";
 		memory-region = <&qseecom_mem>;
 		qcom,hlos-num-ce-hw-instances = <1>;
@@ -1568,7 +1569,7 @@
 
 	qcom_smcinvoke: smcinvoke@c1700000 {
 		compatible = "qcom,smcinvoke";
-		reg = <0xc1700000 0x2200000>;
+		reg = <0xc1700000 0x6400000>;
 		reg-names = "secapp-region";
 	};
 
@@ -1694,8 +1695,8 @@
 		reg-names = "wdt-base";
 		interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
-		qcom,bark-time = <11000>;
-		qcom,pet-time = <9360>;
+		qcom,bark-time = <20000>;
+		qcom,pet-time = <15000>;
 		qcom,ipi-ping;
 		qcom,wakeup-enable;
 		qcom,scandump-sizes = <0x10100 0x10100 0x10100 0x10100
@@ -3805,15 +3806,13 @@
 };
 
 &L1P {
-	regulator-max-microvolt = <1056000>;
-	/* Reduced the headroom by 16mV for AHC */
-	qcom,min-dropout-voltage = <209000>;
+	regulator-max-microvolt = <1200000>;
+	qcom,min-dropout-voltage = <192000>;
 };
 
 &L2P {
-	regulator-max-microvolt = <1104000>;
-	/* Reduced the headroom by 16mV for AHC */
-	qcom,min-dropout-voltage = <209000>;
+	regulator-max-microvolt = <1200000>;
+	qcom,min-dropout-voltage = <192000>;
 };
 
 &L3P {
@@ -3822,12 +3821,12 @@
 };
 
 &L4P {
-	regulator-max-microvolt = <2904000>;
+	regulator-max-microvolt = <2804000>;
 	qcom,min-dropout-voltage = <96000>;
 };
 
 &L5P {
-	regulator-max-microvolt = <2800000>;
+	regulator-max-microvolt = <2900000>;
 	qcom,min-dropout-voltage = <300000>;
 };
 
@@ -3856,7 +3855,7 @@
 
 /*Debug UART*/
 &qupv3_se9_2uart {
-	status = "ok";
+	status = "disabled";
 };
 
 /* HS UART */
@@ -3870,7 +3869,10 @@
 &pm7250b_vadc {
 	#address-cells = <1>;
 	#size-cells = <0>;
-
+	pinctrl-names = "default";
+	pinctrl-0 = <
+			&backlight_therm_default
+	>;
 	charger_skin_therm {
 		reg = <ADC_AMUX_THM1_PU2>;
 		label = "charger_skin_therm";
@@ -3878,6 +3880,14 @@
 		qcom,hw-settle-time = <200>;
 		qcom,pre-scaling = <1 1>;
 	};
+
+    backlight_therm {
+        reg = <ADC_GPIO2_PU2>;
+        label = "backlight_therm";
+        qcom,ratiometric;
+        qcom,hw-settle-time = <200>;
+        qcom,pre-scaling = <1 1>;
+     };
 
 	conn_therm {
 		reg = <ADC_AMUX_THM3_PU2>;
@@ -3888,17 +3898,34 @@
 	};
 };
 
+&pm7250b_gpios {
+	backlight_therm {
+		backlight_therm_default: backlight_therm_default {
+			pins = "gpio12";
+			bias-high-impedance;
+		};
+	};
+
+};
+
 &pm7250b_adc_tm {
 	#address-cells = <1>;
 	#size-cells = <0>;
 	io-channels = <&pm7250b_vadc ADC_AMUX_THM1_PU2>,
-			<&pm7250b_vadc ADC_AMUX_THM3_PU2>;
+			<&pm7250b_vadc ADC_AMUX_THM3_PU2>,
+            <&pm7250b_vadc ADC_GPIO2_PU2>;
 
 	/* Channel nodes */
 	charger_skin_therm {
 		reg = <ADC_AMUX_THM1_PU2>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
+	};
+
+    backlight_therm {
+        reg = <ADC_GPIO2_PU2>;
+        qcom,ratiometric;
+        qcom,hw-settle-time = <200>;
 	};
 
 	conn_therm {
@@ -3913,8 +3940,9 @@
 	#size-cells = <0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <
-			&rfc_cam_therm_default
-			&rear_cam_flash_therm_default
+			&cam_therm1_default
+			&flash_therm_default
+			&wifi_therm_default
 			&quiet_therm_default
 	>;
 
@@ -3942,17 +3970,25 @@
 		qcom,pre-scaling = <1 1>;
 	};
 
-	rfc_cam_therm {
-		reg = <ADC_GPIO2_PU2>;
-		label = "rfc_cam_therm";
+	cam_therm1 {
+		reg = <ADC_GPIO1_PU2>;
+		label = "cam_therm1";
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
 		qcom,pre-scaling = <1 1>;
 	};
 
-	rear_cam_flash_therm {
+	wifi_therm {
+		reg = <ADC_GPIO2_PU2>;
+		label = "wifi_therm";
+		qcom,ratiometric;
+		qcom,hw-settle-time = <200>;
+		qcom,pre-scaling = <1 1>;
+	};
+
+	flash_therm {
 		reg = <ADC_GPIO3_PU2>;
-		label = "rear_cam_flash_therm";
+		label = "flash_therm";
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
 		qcom,pre-scaling = <1 1>;
@@ -3968,15 +4004,22 @@
 };
 
 &pm6150l_gpios {
-	rfc_cam_therm {
-		rfc_cam_therm_default: rfc_cam_therm_default {
+	cam_therm1 {
+		cam_therm1_default: cam_therm1_default {
+			pins = "gpio5";
+			bias-high-impedance;
+		};
+	};
+
+	wifi_therm {
+		wifi_therm_default: wifi_therm_default {
 			pins = "gpio6";
 			bias-high-impedance;
 		};
 	};
 
-	rear_cam_flash_therm {
-		rear_cam_flash_therm_default: rear_cam_flash_therm_default {
+	flash_therm {
+		flash_therm_default: flash_therm_default {
 			pins = "gpio7";
 			bias-high-impedance;
 		};
@@ -4000,19 +4043,19 @@
 
 	/* Channel nodes */
 
-	pa_therm1 {
+	4G_pa_therm {
 		reg = <ADC_AMUX_THM1_PU2>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
 	};
 
-	pa_therm0 {
+	5G_pa_therm {
 		reg = <ADC_AMUX_THM3_PU2>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
 	};
 
-	rear_cam_flash_therm {
+	flash_therm {
 		reg = <ADC_GPIO3_PU2>;
 		qcom,ratiometric;
 		qcom,hw-settle-time = <200>;
@@ -4046,6 +4089,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			io-channels = <&pm6150l_vadc ADC_AMUX_THM2_PU2>,
+					<&pm6150l_vadc ADC_GPIO1_PU2>,
 					<&pm6150l_vadc ADC_GPIO2_PU2>;
 
 			msm_therm {
@@ -4054,7 +4098,13 @@
 				qcom,hw-settle-time = <200>;
 			};
 
-			rfc_cam_therm {
+			cam_therm1 {
+				reg = <ADC_GPIO1_PU2>;
+				qcom,ratiometric;
+				qcom,hw-settle-time = <200>;
+			};
+
+			wifi_therm {
 				reg = <ADC_GPIO2_PU2>;
 				qcom,ratiometric;
 				qcom,hw-settle-time = <200>;
