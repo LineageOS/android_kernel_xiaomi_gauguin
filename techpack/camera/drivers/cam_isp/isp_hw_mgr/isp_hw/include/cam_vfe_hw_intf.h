@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _CAM_VFE_HW_INTF_H_
@@ -140,7 +139,6 @@ struct cam_vfe_hw_vfe_bus_rd_acquire_args {
  *                           (Default is Master in case of Single VFE)
  * @dual_slave_core:         If Master and Slave exists, HW Index of Slave
  * @cdm_ops:                 CDM operations
- * disable_ubwc_comp:        Disable UBWC compression
  */
 struct cam_vfe_hw_vfe_out_acquire_args {
 	struct cam_isp_resource_node         *rsrc_node;
@@ -151,7 +149,6 @@ struct cam_vfe_hw_vfe_out_acquire_args {
 	uint32_t                              is_master;
 	uint32_t                              dual_slave_core;
 	struct cam_cdm_utils_ops             *cdm_ops;
-	bool                                  disable_ubwc_comp;
 };
 
 /*
@@ -255,19 +252,6 @@ struct cam_vfe_bw_update_args {
 };
 
 /*
- * struct cam_vfe_num_of_acquired_resources:
- *
- * @num_pix_rsrc:            Number of pix resources acquired in context
- * @num_pd_rsrc:             Number of pd resources acquired in context
- * @num_rdi_rsrc:            Number of rdi resources acquired in context
- */
-struct cam_vfe_num_of_acquired_resources {
-	uint32_t      num_pix_rsrc;
-	uint32_t      num_pd_rsrc;
-	uint32_t      num_rdi_rsrc;
-};
-
-/*
  * struct cam_vfe_fe_update_args:
  *
  * @node_res:             Resource to get fetch configuration
@@ -304,15 +288,15 @@ struct cam_vfe_bw_control_args {
  * @list:                    list_head node for the payload
  * @irq_reg_val:             IRQ and Error register values, read when IRQ was
  *                           handled
- * @reg_val:                 Value of any critical register that needs to be
- *                           read at during irq handling
+ * @th_reg_val:              Value of any critical register that needs to be
+ *                           read at th to avoid any latencies in bh processing
  *
  * @ts:                      Timestamp
  */
 struct cam_vfe_top_irq_evt_payload {
 	struct list_head            list;
 	uint32_t                    irq_reg_val[CAM_IFE_IRQ_REGISTERS_MAX];
-	uint32_t                    reg_val;
+	uint32_t                    th_reg_val;
 	struct cam_isp_timestamp    ts;
 };
 

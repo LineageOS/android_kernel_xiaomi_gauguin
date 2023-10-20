@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
  */
 
 #include <media/cam_defs.h>
@@ -118,7 +117,6 @@ static int cam_isp_update_dual_config(
 		(cmd_desc->offset >=
 		(len - sizeof(struct cam_isp_dual_config)))) {
 		CAM_ERR(CAM_ISP, "not enough buffer provided");
-		cam_mem_put_cpu_buf(cmd_desc->mem_handle);
 		return -EINVAL;
 	}
 	remain_len = len - cmd_desc->offset;
@@ -129,7 +127,6 @@ static int cam_isp_update_dual_config(
 		sizeof(struct cam_isp_dual_stripe_config)) >
 		(remain_len - offsetof(struct cam_isp_dual_config, stripes))) {
 		CAM_ERR(CAM_ISP, "not enough buffer for all the dual configs");
-		cam_mem_put_cpu_buf(cmd_desc->mem_handle);
 		return -EINVAL;
 	}
 	for (i = 0; i < dual_config->num_ports; i++) {
@@ -143,14 +140,6 @@ static int cam_isp_update_dual_config(
 		}
 
 		hw_mgr_res = &res_list_isp_out[i];
-		if (!hw_mgr_res) {
-			CAM_ERR(CAM_ISP,
-				"Invalid isp out resource i %d num_out_res %d",
-				i, dual_config->num_ports);
-			rc = -EINVAL;
-			goto end;
-		}
-
 		for (j = 0; j < CAM_ISP_HW_SPLIT_MAX; j++) {
 			if (!hw_mgr_res->hw_res[j])
 				continue;
@@ -187,7 +176,6 @@ static int cam_isp_update_dual_config(
 	}
 
 end:
-	cam_mem_put_cpu_buf(cmd_desc->mem_handle);
 	return rc;
 }
 
@@ -492,8 +480,6 @@ int cam_isp_add_io_buffers(
 	uint32_t                            i, j, num_out_buf, num_in_buf;
 	uint32_t                            res_id_out, res_id_in, plane_id;
 	uint32_t                            io_cfg_used_bytes, num_ent;
-	uint32_t                           *image_buf_addr;
-	uint32_t                           *image_buf_offset;
 	uint64_t                            iova_addr;
 	size_t                              size;
 	int32_t                             hdl;
@@ -696,10 +682,6 @@ int cam_isp_add_io_buffers(
 			wm_update.num_buf   = plane_id;
 			wm_update.io_cfg    = &io_cfg[i];
 			wm_update.frame_header = 0;
-			for (plane_id = 0; plane_id < CAM_PACKET_MAX_PLANES;
-				plane_id++)
-				wm_update.image_buf_offset[plane_id] = 0;
-
 			iova_addr = frame_header_info->frame_header_iova_addr;
 			if ((frame_header_info->frame_header_enable) &&
 				!(frame_header_info->frame_header_res_id)) {
@@ -732,18 +714,6 @@ int cam_isp_add_io_buffers(
 				return rc;
 			}
 			io_cfg_used_bytes += update_buf.cmd.used_bytes;
-			image_buf_addr =
-				out_map_entries->image_buf_addr;
-			image_buf_offset =
-				wm_update.image_buf_offset;
-			if (j == CAM_ISP_HW_SPLIT_LEFT) {
-				for (plane_id = 0;
-					plane_id < CAM_PACKET_MAX_PLANES;
-					plane_id++)
-					image_buf_addr[plane_id] =
-						io_addr[plane_id] +
-						image_buf_offset[plane_id];
-			}
 		}
 		for (j = 0; j < CAM_ISP_HW_SPLIT_MAX &&
 			io_cfg[i].direction == CAM_BUF_INPUT; j++) {

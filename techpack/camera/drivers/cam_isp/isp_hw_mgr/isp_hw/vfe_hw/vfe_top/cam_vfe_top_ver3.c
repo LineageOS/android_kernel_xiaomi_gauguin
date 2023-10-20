@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2019-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2019-2020, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/slab.h>
@@ -29,9 +29,6 @@ struct cam_vfe_top_ver3_priv {
 	unsigned long                       req_clk_rate[
 						CAM_VFE_TOP_MUX_MAX];
 	struct cam_vfe_top_priv_common      top_common;
-	uint32_t                            num_pix_rsrc;
-	uint32_t                            num_pd_rsrc;
-	uint32_t                            num_rdi_rsrc;
 };
 
 static int cam_vfe_top_ver3_mux_get_base(struct cam_vfe_top_ver3_priv *top_priv,
@@ -119,9 +116,6 @@ static int cam_vfe_top_ver3_set_hw_clk_rate(
 			rc = 0;
 			goto end;
 		}
-
-		soc_private->ife_clk_src = max_clk_rate;
-
 		ahb_vote.type = CAM_VOTE_ABSOLUTE;
 		ahb_vote.vote.level = clk_lvl;
 		cam_cpas_update_ahb_vote(soc_private->cpas_handle, &ahb_vote);
@@ -406,10 +400,6 @@ int cam_vfe_top_ver3_release(void *device_priv,
 	top_priv = (struct cam_vfe_top_ver3_priv   *)device_priv;
 	mux_res = (struct cam_isp_resource_node *)release_args;
 
-	top_priv->num_pix_rsrc = 0;
-	top_priv->num_pd_rsrc = 0;
-	top_priv->num_rdi_rsrc = 0;
-
 	CAM_DBG(CAM_ISP, "Resource in state %d", mux_res->res_state);
 	if (mux_res->res_state < CAM_ISP_RESOURCE_STATE_RESERVED) {
 		CAM_ERR(CAM_ISP, "Error, Resource in Invalid res_state :%d",
@@ -484,8 +474,6 @@ int cam_vfe_top_ver3_stop(void *device_priv,
 	struct cam_vfe_top_ver3_priv            *top_priv;
 	struct cam_isp_resource_node            *mux_res;
 	struct cam_hw_info                      *hw_info = NULL;
-	struct cam_hw_soc_info                  *soc_info = NULL;
-	struct cam_vfe_soc_private              *soc_private = NULL;
 	int i, rc = 0;
 
 	if (!device_priv || !stop_args) {
@@ -496,8 +484,6 @@ int cam_vfe_top_ver3_stop(void *device_priv,
 	top_priv = (struct cam_vfe_top_ver3_priv   *)device_priv;
 	mux_res = (struct cam_isp_resource_node *)stop_args;
 	hw_info = (struct cam_hw_info  *)mux_res->hw_intf->hw_priv;
-	soc_info = top_priv->common_data.soc_info;
-	soc_private = soc_info->soc_private;
 
 	if (mux_res->res_id < CAM_ISP_HW_VFE_IN_MAX) {
 		rc = mux_res->stop(mux_res);
@@ -520,7 +506,6 @@ int cam_vfe_top_ver3_stop(void *device_priv,
 		}
 	}
 
-	soc_private->ife_clk_src = 0;
 	return rc;
 }
 
@@ -581,32 +566,6 @@ static int cam_vfe_top_ver3_get_irq_register_dump(
 		cmd_update->res->process_cmd(cmd_update->res,
 			CAM_ISP_HW_CMD_GET_IRQ_REGISTER_DUMP, cmd_args,
 			arg_size);
-	return 0;
-}
-
-static int cam_vfe_top_ver3_set_num_of_acquired_resource(
-	struct cam_vfe_top_ver3_priv *top_priv,
-	void *cmd_args, uint32_t arg_size)
-{
-	struct cam_vfe_num_of_acquired_resources *num_rsrc = cmd_args;
-
-	top_priv->num_pix_rsrc = num_rsrc->num_pix_rsrc;
-	top_priv->num_pd_rsrc = num_rsrc->num_pd_rsrc;
-	top_priv->num_rdi_rsrc = num_rsrc->num_rdi_rsrc;
-
-	return 0;
-}
-
-static int cam_vfe_top_ver3_get_num_of_acquired_resource(
-	struct cam_vfe_top_ver3_priv *top_priv,
-	void *cmd_args, uint32_t arg_size)
-{
-	struct cam_vfe_num_of_acquired_resources *num_rsrc = cmd_args;
-
-	num_rsrc->num_pix_rsrc = top_priv->num_pix_rsrc;
-	num_rsrc->num_pd_rsrc = top_priv->num_pd_rsrc;
-	num_rsrc->num_rdi_rsrc = top_priv->num_rdi_rsrc;
-
 	return 0;
 }
 
@@ -672,14 +631,6 @@ int cam_vfe_top_ver3_process_cmd(void *device_priv, uint32_t cmd_type,
 		break;
 	case CAM_ISP_HW_CMD_GET_IRQ_REGISTER_DUMP:
 		rc = cam_vfe_top_ver3_get_irq_register_dump(top_priv,
-			cmd_args, arg_size);
-		break;
-	case CAM_ISP_HW_CMD_SET_NUM_OF_ACQUIRED_RESOURCE:
-		rc = cam_vfe_top_ver3_set_num_of_acquired_resource(top_priv,
-			cmd_args, arg_size);
-		break;
-	case CAM_ISP_HW_CMD_GET_NUM_OF_ACQUIRED_RESOURCE:
-		rc = cam_vfe_top_ver3_get_num_of_acquired_resource(top_priv,
 			cmd_args, arg_size);
 		break;
 	default:

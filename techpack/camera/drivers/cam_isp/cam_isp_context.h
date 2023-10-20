@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _CAM_ISP_CONTEXT_H_
@@ -134,30 +133,21 @@ struct cam_isp_ctx_irq_ops {
 /**
  * struct cam_isp_ctx_req - ISP context request object
  *
- * @base:                      Common request object ponter
- * @cfg:                       ISP hardware configuration array
- * @num_cfg:                   Number of ISP hardware configuration entries
- * @fence_map_out:             Output fence mapping array
- * @num_fence_map_out:         Number of the output fence map
- * @fence_map_in:              Input fence mapping array
- * @num_fence_map_in:          Number of input fence map
- * @num_acked:                 Count to track acked entried for output.
- *                             If count equals the number of fence out, it means
- *                             the request has been completed.
- * @num_deferred_acks:         Number of buf_dones/acks that are deferred to
- *                             handle or signalled in special scenarios.
- *                             Increment this count instead of num_acked and
- *                             handle the events later where eventually
- *                             increment num_acked.
- * @deferred_fence_map_index   Saves the indices of fence_map_out for which
- *                             handling of buf_done is deferred.
- * @bubble_report:             Flag to track if bubble report is active on
- *                             current request
- * @hw_update_data:            HW update data for this request
- * @event_timestamp:           Timestamp for different stage of request
- * @reapply:                   True if reapplying after bubble
- * @cdm_reset_before_apply:    For bubble re-apply when buf done not coming set
- *                             to True
+ * @base:                  Common request object ponter
+ * @cfg:                   ISP hardware configuration array
+ * @num_cfg:               Number of ISP hardware configuration entries
+ * @fence_map_out:         Output fence mapping array
+ * @num_fence_map_out:     Number of the output fence map
+ * @fence_map_in:          Input fence mapping array
+ * @num_fence_map_in:      Number of input fence map
+ * @num_acked:             Count to track acked entried for output.
+ *                         If count equals the number of fence out, it means
+ *                         the request has been completed.
+ * @bubble_report:         Flag to track if bubble report is active on
+ *                         current request
+ * @hw_update_data:        HW update data for this request
+ * @event_timestamp:       Timestamp for different stage of request
+ * @reapply:               True if reapplying after bubble
  *
  */
 struct cam_isp_ctx_req {
@@ -171,16 +161,12 @@ struct cam_isp_ctx_req {
 	struct cam_hw_fence_map_entry         fence_map_in[CAM_ISP_CTX_RES_MAX];
 	uint32_t                              num_fence_map_in;
 	uint32_t                              num_acked;
-	uint32_t                              num_deferred_acks;
-	uint32_t                              deferred_fence_map_index[
-						CAM_ISP_CTX_RES_MAX];
 	int32_t                               bubble_report;
 	struct cam_isp_prepare_hw_update_data hw_update_data;
 	ktime_t                               event_timestamp
 		[CAM_ISP_CTX_EVENT_MAX];
 	bool                                  bubble_detected;
 	bool                                  reapply;
-	bool                                  cdm_reset_before_apply;
 };
 
 /**
@@ -252,7 +238,6 @@ struct cam_isp_context_event_record {
  * @subscribe_event:           The irq event mask that CRM subscribes to, IFE
  *                             will invoke CRM cb at those event.
  * @last_applied_req_id:       Last applied request id
- * @last_sof_timestamp:        SOF timestamp of the last frame
  * @state_monitor_head:        Write index to the state monitoring array
  * @req_info                   Request id information about last buf done
  * @cam_isp_ctx_state_monitor: State monitoring array
@@ -266,8 +251,6 @@ struct cam_isp_context_event_record {
  * @split_acquire:             Indicate whether a separate acquire is expected
  * @custom_enabled:            Custom HW enabled for this ctx
  * @use_frame_header_ts:       Use frame header for qtimer ts
- * @support_consumed_addr:     Indicate whether HW has last consumed addr reg
- * @apply_in_progress          Whether request apply is in progress
  * @init_timestamp:            Timestamp at which this context is initialized
  * @rxd_epoch:                 Indicate whether epoch has been received. Used to
  *                             decide whether to apply request in offline ctx
@@ -296,7 +279,6 @@ struct cam_isp_context {
 	int64_t                          reported_req_id;
 	uint32_t                         subscribe_event;
 	int64_t                          last_applied_req_id;
-	uint64_t                         last_sof_timestamp;
 	atomic64_t                       state_monitor_head;
 	struct cam_isp_context_state_monitor cam_isp_ctx_state_monitor[
 		CAM_ISP_CTX_STATE_MONITOR_MAX_ENTRIES];
@@ -312,8 +294,6 @@ struct cam_isp_context {
 	bool                                  split_acquire;
 	bool                                  custom_enabled;
 	bool                                  use_frame_header_ts;
-	bool                                  support_consumed_addr;
-	atomic_t                              apply_in_progress;
 	unsigned int                          init_timestamp;
 	atomic_t                              rxd_epoch;
 	struct cam_req_mgr_core_workq        *workq;

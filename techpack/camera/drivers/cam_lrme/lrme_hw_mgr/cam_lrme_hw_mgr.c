@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -110,11 +109,6 @@ static int cam_lrme_mgr_util_packet_validate(struct cam_packet *packet,
 
 	if (!packet->num_io_configs) {
 		CAM_ERR(CAM_LRME, "no io configs");
-		return -EINVAL;
-	}
-
-	if (!packet->num_cmd_buf) {
-		CAM_ERR(CAM_LRME, "no cmd bufs");
 		return -EINVAL;
 	}
 
@@ -696,7 +690,6 @@ static int cam_lrme_mgr_hw_dump(void *hw_mgr_priv, void *hw_dump_args)
 	CAM_DBG(CAM_LRME, "Offset before %zu after %zu",
 		dump_args->offset, lrme_dump_args.offset);
 	dump_args->offset = lrme_dump_args.offset;
-	cam_mem_put_cpu_buf(dump_args->buf_handle);
 	return rc;
 }
 
@@ -1080,7 +1073,7 @@ int cam_lrme_mgr_register_device(
 	CAM_DBG(CAM_LRME, "Create submit workq for %s", buf);
 	rc = cam_req_mgr_workq_create(buf,
 		CAM_LRME_WORKQ_NUM_TASK,
-		&hw_device->work, CRM_WORKQ_USAGE_NON_IRQ, 0, true,
+		&hw_device->work, CRM_WORKQ_USAGE_NON_IRQ, 0,
 		cam_req_mgr_process_workq_cam_lrme_device_submit_worker);
 	if (rc) {
 		CAM_ERR(CAM_LRME,
