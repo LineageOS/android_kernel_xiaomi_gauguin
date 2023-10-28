@@ -6,6 +6,7 @@
 
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_atomic.h>
+#include <drm/drm_notifier_mi.h>
 
 #include "msm_kms.h"
 #include "sde_connector.h"
@@ -165,6 +166,8 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 {
 	int rc = 0;
 	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+	struct mi_drm_notifier mi_notify;
+	int power_mode = 0;
 
 	if (!bridge) {
 		DSI_ERR("Invalid params\n");
@@ -178,6 +181,11 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 
 	if (bridge->encoder->crtc->state->active_changed)
 		atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
+
+	power_mode = MI_DRM_BLANK_UNBLANK;
+	mi_notify.data = &power_mode;
+	mi_notify.id = MSM_DRM_PRIMARY_DISPLAY;
+	mi_drm_notifier_call_chain(MI_DRM_EARLY_EVENT_BLANK, &mi_notify);
 
 	/* By this point mode should have been validated through mode_fixup */
 	rc = dsi_display_set_mode(c_bridge->display,
@@ -212,6 +220,9 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 				c_bridge->id, rc);
 		(void)dsi_display_unprepare(c_bridge->display);
 	}
+
+	mi_drm_notifier_call_chain(MI_DRM_EVENT_BLANK, &mi_notify);
+
 	SDE_ATRACE_END("dsi_display_enable");
 
 	rc = dsi_display_splash_res_cleanup(c_bridge->display);
@@ -285,11 +296,18 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 {
 	int rc = 0;
 	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+	struct mi_drm_notifier mi_notify;
+	int power_mode = 0;
 
 	if (!bridge) {
 		DSI_ERR("Invalid params\n");
 		return;
 	}
+
+	power_mode = MI_DRM_BLANK_POWERDOWN;
+	mi_notify.data = &power_mode;
+	mi_notify.id = MSM_DRM_PRIMARY_DISPLAY;
+	mi_drm_notifier_call_chain(MI_DRM_EARLY_EVENT_BLANK, &mi_notify);
 
 	SDE_ATRACE_BEGIN("dsi_bridge_post_disable");
 	SDE_ATRACE_BEGIN("dsi_display_disable");
@@ -309,6 +327,9 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 		SDE_ATRACE_END("dsi_bridge_post_disable");
 		return;
 	}
+
+	mi_drm_notifier_call_chain(MI_DRM_EVENT_BLANK, &mi_notify);
+
 	SDE_ATRACE_END("dsi_bridge_post_disable");
 }
 
