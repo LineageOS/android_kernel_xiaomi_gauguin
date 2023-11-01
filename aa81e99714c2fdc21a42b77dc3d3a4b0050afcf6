@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e93b6b53_f7810edc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 32442
+      },
+      "writtenOn": "2023-11-01T05:30:43Z",
+      "side": 1,
+      "message": "Later changes were found to cause viewfinder delays.\nI will checkout what\u0027s wrong later on.",
+      "revId": "aa81e99714c2fdc21a42b77dc3d3a4b0050afcf6",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
