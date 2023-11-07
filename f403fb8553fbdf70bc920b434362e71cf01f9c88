@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "66d012c7_0cbd7cbf",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 25732
+      },
+      "writtenOn": "2023-11-07T13:13:55Z",
+      "side": 1,
+      "message": "Can be dropped, audio HAL works fine without this driver",
+      "revId": "f403fb8553fbdf70bc920b434362e71cf01f9c88",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
