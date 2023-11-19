@@ -82,8 +82,7 @@ static inline int __cpupri_find(struct cpupri *cp, struct task_struct *p,
 
 	if (lowest_mask) {
 		cpumask_and(lowest_mask, &p->cpus_allowed, vec->mask);
-		cpumask_andnot(lowest_mask, lowest_mask,
-			       cpu_isolated_mask);
+
 		/*
 		 * We have to ensure that we have at least one bit
 		 * still set in the array, since the map could have
@@ -148,7 +147,7 @@ int cpupri_find_fitness(struct cpupri *cp, struct task_struct *p,
 		bool (*fitness_fn)(struct task_struct *p, int cpu))
 {
 	int task_pri = convert_prio(p->prio);
-	bool drop_nopreempts = task_pri > CPUPRI_NORMAL;
+	bool drop_nopreempts = task_pri <= MAX_RT_PRIO;
 	int idx, cpu;
 
 	BUG_ON(task_pri >= CPUPRI_NR_PRIORITIES);
