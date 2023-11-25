@@ -3734,9 +3734,9 @@ use_pon_ocv:
                         } else
                                 soc = calculate_soc;
                 }
-                qg_dbg(chip, QG_DEBUG_PON, "v_float=%d v_cutoff=%d FULL_SOC=%d CUTOFF_SOC=%d \
-                                        calculate_soc=%d pon_soc=%d shutdown[SDAM_SOC]=%d \
-                                        final soc = %d ibat = %d\n",
+                qg_dbg(chip, QG_DEBUG_PON, "v_float=%d v_cutoff=%d FULL_SOC=%d CUTOFF_SOC=%d "
+                                        "calculate_soc=%d pon_soc=%d shutdown[SDAM_SOC]=%d "
+                                        "final soc = %d ibat = %d\n",
                                         chip->bp.float_volt_uv, chip->dt.vbatt_cutoff_mv * 1000,
                                         full_soc, cutoff_soc, calculate_soc, pon_soc, shutdown[SDAM_SOC],
                                         soc, shutdown[SDAM_IBAT_UA]);
