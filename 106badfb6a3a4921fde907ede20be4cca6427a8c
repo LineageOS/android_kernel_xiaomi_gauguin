@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "614cce7c_ddff2abc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 13648
+      },
+      "writtenOn": "2026-01-25T15:05:35Z",
+      "side": 1,
+      "message": "Morge only to one branch and fast-forward. There\u0027s no need to diverge for no reason.",
+      "revId": "106badfb6a3a4921fde907ede20be4cca6427a8c",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
