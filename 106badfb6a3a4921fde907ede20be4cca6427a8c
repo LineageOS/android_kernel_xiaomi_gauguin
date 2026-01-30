@@ -34,6 +34,23 @@
       "parentUuid": "614cce7c_ddff2abc",
       "revId": "106badfb6a3a4921fde907ede20be4cca6427a8c",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c6624357_a7e558de",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 13648
+      },
+      "writtenOn": "2026-01-30T20:48:55Z",
+      "side": 1,
+      "message": "I abandoned the other one then.",
+      "revId": "106badfb6a3a4921fde907ede20be4cca6427a8c",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
